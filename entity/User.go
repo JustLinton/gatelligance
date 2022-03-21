@@ -2,18 +2,16 @@ package entity
 
 import "github.com/jinzhu/gorm"
 
-type DownloadTable struct {
-	Field1 int
-	Field2 int
+// User UserInfo 用户信息
+type User struct {
+	ID       string `gorm:"primary_key"`
+	Phone    string
+	NickName string
+	Email    string
+	PassSHA  string
+	Gender   string
 }
 
-func InitUser(db *gorm.DB) {
-	db.AutoMigrate(&DownloadTable{})
-	var uu []DownloadTable
-	db.Find(&uu, "field1=?", 1)
-	if len(uu) == 0 {
-		//1的意思是count
-		tmp := DownloadTable{1, 0}
-		db.Create(tmp)
-	}
+func InitUsers(db *gorm.DB) {
+	db.AutoMigrate(&User{})
 }
