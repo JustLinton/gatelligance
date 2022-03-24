@@ -3,10 +3,10 @@ package controller
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
 	"net/http"
 
 	Service "gatelligance/service"
+	Utils "gatelligance/utils"
 	Verification "gatelligance/verification"
 
 	"github.com/gin-gonic/gin"
@@ -21,7 +21,12 @@ func InitUsersController(err *error, db *gorm.DB, router *gin.Engine) {
 		email := c.DefaultPostForm("email", "nil")
 
 		if password == "nil" || email == "nil" {
-			c.String(http.StatusNotAcceptable, fmt.Sprintln("network"))
+			// c.String(http.StatusNotAcceptable, fmt.Sprintln("network"))
+			c.JSON(http.StatusOK, Utils.LoginResponse{
+				Token:     "-1",
+				IsSuccess: "false",
+				ErrorMsg:  "100",
+			})
 			return
 		}
 
@@ -35,7 +40,11 @@ func InitUsersController(err *error, db *gorm.DB, router *gin.Engine) {
 		nickName := c.DefaultPostForm("nickName", "nil")
 
 		if email == "nil" || password == "nil" || nickName == "nil" {
-			c.String(http.StatusNotAcceptable, fmt.Sprintln("network"))
+			// c.String(http.StatusNotAcceptable, fmt.Sprintln("network"))
+			c.JSON(http.StatusOK, Utils.RegisterResponse{
+				IsSuccess: "false",
+				ErrorMsg:  "100",
+			})
 		}
 
 		Service.HandleUserRegister(password, email, nickName, db, err, c)
@@ -47,12 +56,19 @@ func InitUsersController(err *error, db *gorm.DB, router *gin.Engine) {
 	router.GET("/frontEnd/sayHello", func(c *gin.Context) {
 
 		strToken := c.DefaultQuery("token", "nil")
-		claim, stat := Verification.VerifyToken(strToken)
-		if !stat {
+		// claim, stat := Verification.VerifyToken(strToken)
+		// if !stat {
+		// 	c.String(http.StatusOK, "Login expired.")
+		// 	return
+		// }
+		// c.String(http.StatusOK, "Hello,"+claim.ID)
+
+		success, user := Verification.GetUserFromToken(strToken, err, db, router)
+		if success {
+			c.String(http.StatusOK, "Hello,"+user.Email)
+		} else {
 			c.String(http.StatusOK, "Login expired.")
-			return
 		}
-		c.String(http.StatusOK, "Hello,"+claim.ID)
 	})
 }
 

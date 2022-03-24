@@ -6,8 +6,11 @@ import (
 	"net/http"
 	"time"
 
+	Entity "gatelligance/entity"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 )
 
 const (
@@ -34,6 +37,23 @@ var (
 	Secret     = "this-is-a-secret-key-by-linton-jiang." // 加盐
 	ExpireTime = 3600                                    // token有效期
 )
+
+func GetUserFromToken(strToken string, err *error, db *gorm.DB, router *gin.Engine) (bool, Entity.User) {
+	var uu = new(Entity.User)
+	claim, stat := VerifyToken(strToken)
+	if !stat {
+		return false, *uu
+	}
+	var uua []Entity.User
+
+	db.Find(&uua, "id=?", claim.ID)
+
+	if len(uua) == 0 {
+		return false, *uu
+	}
+
+	return true, uua[0]
+}
 
 func VerifyToken(strToken string) (*JWTClaims, bool) {
 	claim, err := verifyAction(strToken)

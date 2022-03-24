@@ -22,7 +22,7 @@ func main() {
 
 	router := initAPIs(&err, db)
 	router.Use(Cors())
-	router.Run(":8082")
+	router.Run(":8091")
 
 }
 
@@ -31,8 +31,10 @@ func initAPIs(err *error, db *gorm.DB) *gin.Engine {
 	router := gin.Default()
 
 	controller.InitUsersController(err, db, router)
+	controller.InitWorkController(err, db, router)
 
 	router.GET("/", func(c *gin.Context) {
+
 		c.String(http.StatusOK, "这里是凝智成林业务后端👋")
 	})
 

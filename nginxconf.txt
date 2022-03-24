@@ -1,0 +1,18 @@
+server {
+    listen 8090;
+    server_name app.cupof.beer;
+
+
+ssl on;
+   #ssl_certificate /home/lighthouse/ssl/7066259_test.cupof.beer.pem;
+   #ssl_certificate_key /home/lighthouse/ssl/7066259_test.cupof.beer.key;
+   ssl_certificate /home/lighthouse/ssl/7341475_app.cupof.beer.pem;
+   ssl_certificate_key /home/lighthouse/ssl/7341475_app.cupof.beer.key;
+
+    location / {
+        proxy_pass http://127.0.0.1:8091/;
+    }
+}
+
+lighthouse@VM-8-14-ubuntu:~/gatelligance$ go env -w GO111MODULE=on
+lighthouse@VM-8-14-ubuntu:~/gatelligance$ go env -w GOPROXY=https://goproxy.io,direct
