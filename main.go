@@ -54,6 +54,8 @@ func connectDatabase() (*gorm.DB, error) {
 func initEntities(db *gorm.DB) {
 	Entity.InitUsers(db)
 	Entity.InitResources(db)
+	Entity.InitTransaction(db)
+	Entity.InitSlaveServer(db)
 }
 
 func Cors() gin.HandlerFunc {

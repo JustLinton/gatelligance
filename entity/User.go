@@ -10,6 +10,7 @@ type User struct {
 	Email    string
 	PassSHA  string
 	Gender   string
+	Avatar   string
 }
 
 func InitUsers(db *gorm.DB) {

@@ -16,3 +16,12 @@ type WorkSubmitResponse struct {
 	IsSuccess string
 	ErrorMsg  string
 }
+
+type CheckLinkTransactionResponse struct {
+	IsSuccess string
+	ErrorMsg  string
+
+	Progress string
+	Status   string
+	Output   string
+}

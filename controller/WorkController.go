@@ -14,6 +14,38 @@ import (
 
 func InitWorkController(err *error, db *gorm.DB, router *gin.Engine) {
 
+	router.POST("/frontEnd/checkLinktransaction", func(c *gin.Context) {
+		tid := c.DefaultPostForm("tid", "nil")
+		token := c.DefaultPostForm("token", "nil")
+
+		if tid == "nil" || token == "nil" {
+			c.String(http.StatusNotAcceptable, fmt.Sprintln("network"))
+			return
+		}
+
+		success, user := Verification.GetUserFromToken(token, err, db, router)
+		if success {
+			prog, stat, output := Service.CheckLinkTransactionService(tid, db)
+			c.JSON(http.StatusOK, Utils.CheckLinkTransactionResponse{
+				IsSuccess: "true",
+				ErrorMsg:  "200",
+				Progress:  prog,
+				Status:    stat,
+				Output:    output,
+			})
+			print(user.ID)
+		} else {
+			c.JSON(http.StatusOK, Utils.CheckLinkTransactionResponse{
+				IsSuccess: "false",
+				ErrorMsg:  "501",
+				Progress:  "-1",
+				Status:    "-1",
+				Output:    "nil",
+			})
+		}
+
+	})
+
 	router.POST("/frontEnd/uploadLink", func(c *gin.Context) {
 
 		link := c.DefaultPostForm("link", "nil")
@@ -24,21 +56,15 @@ func InitWorkController(err *error, db *gorm.DB, router *gin.Engine) {
 			return
 		}
 
-		// claim, stat := Verification.VerifyToken(strToken)
-		// if !stat {
-		// 	c.String(http.StatusOK, "Login expired.")
-		// 	return
-		// }
-		// c.String(http.StatusOK, "Hello,"+claim.ID)
-
 		success, user := Verification.GetUserFromToken(token, err, db, router)
 		if success {
 			c.JSON(http.StatusOK, Utils.WorkSubmitResponse{
 				IsSuccess: "true",
 				ErrorMsg:  "200",
-				TaskList:  Service.GetAudioSummary(link, "1"),
+				TaskList:  Service.CreateLinkTransaction(link, db, user.ID),
+				// TaskList: Service.CreateLinkTransaction(link),
 			})
-			print(user.ID)
+			// println(user.ID)
 		} else {
 			c.JSON(http.StatusOK, Utils.WorkSubmitResponse{
 				IsSuccess: "false",

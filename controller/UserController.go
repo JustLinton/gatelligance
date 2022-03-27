@@ -1,10 +1,9 @@
 package controller
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"net/http"
 
+	"gatelligance/service"
 	Service "gatelligance/service"
 	Utils "gatelligance/utils"
 	Verification "gatelligance/verification"
@@ -55,27 +54,27 @@ func InitUsersController(err *error, db *gorm.DB, router *gin.Engine) {
 	//for test
 	router.GET("/frontEnd/sayHello", func(c *gin.Context) {
 
-		strToken := c.DefaultQuery("token", "nil")
-		// claim, stat := Verification.VerifyToken(strToken)
-		// if !stat {
-		// 	c.String(http.StatusOK, "Login expired.")
-		// 	return
-		// }
-		// c.String(http.StatusOK, "Hello,"+claim.ID)
+		// strToken := c.DefaultQuery("token", "nil")
 
-		success, user := Verification.GetUserFromToken(strToken, err, db, router)
-		if success {
-			c.String(http.StatusOK, "Hello,"+user.Email)
-		} else {
-			c.String(http.StatusOK, "Login expired.")
-		}
+		// success, user := Verification.GetUserFromToken(strToken, err, db, router)
+		// if success {
+		// 	c.String(http.StatusOK, "Hello,"+user.Email)
+		// } else {
+		// 	c.String(http.StatusOK, "Login expired.")
+		// }
+
+		// sid, addr := Service.GetNextUseableSlaveServer(db)
+		// c.String(http.StatusOK, strconv.Itoa(sid)+",add:"+addr)
+
+		uuid := c.DefaultQuery("token", "nil")
+		service.GetUsersTransactionList(db, uuid)
 	})
 }
 
-func getSHA256HashCode(message []byte) string {
-	hash := sha256.New()
-	hash.Write(message)
-	bytes := hash.Sum(nil)
-	hashCode := hex.EncodeToString(bytes)
-	return hashCode
-}
+// func getSHA256HashCode(message []byte) string {
+// 	hash := sha256.New()
+// 	hash.Write(message)
+// 	bytes := hash.Sum(nil)
+// 	hashCode := hex.EncodeToString(bytes)
+// 	return hashCode
+// }
