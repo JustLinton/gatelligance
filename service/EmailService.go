@@ -1,9 +1,14 @@
 package service
 
 import (
+	"fmt"
+	"gatelligance/entity"
+	"math/rand"
 	"strings"
+	"time"
 
 	"github.com/go-gomail/gomail"
+	"github.com/jinzhu/gorm"
 )
 
 type EmailParam struct {
@@ -78,18 +83,73 @@ func SendEmail(subject, body string) {
 	}
 }
 
-func SendTest() {
+func SendActivateCode(uuid string, db *gorm.DB) bool {
+	var uu []entity.User
+
+	db.Find(&uu, "id=?", uuid)
+
+	if len(uu) == 0 {
+		fmt.Printf("user email send: user not found\n")
+		return false
+	}
+
+	vcode := get6DigitCode()
+
+	var aa []entity.EmailActiCode
+	db.Find(&aa, "uuid=?", uuid)
+	if len(aa) != 0 {
+		db.Delete(aa[0])
+	}
+
+	db.Create(entity.EmailActiCode{
+		Uuid: uuid,
+		Code: vcode,
+	})
+
+	sendEmail(vcode, uu[0].Email)
+	return true
+}
+
+func ActivateEmail(uuid string, code string, db *gorm.DB) bool {
+	var uu []entity.User
+
+	db.Find(&uu, "id=?", uuid)
+
+	if len(uu) == 0 {
+		fmt.Printf("user email activatation: user not found\n")
+		return false
+	}
+
+	var aa []entity.EmailActiCode
+	db.Find(&aa, "uuid=?", uuid)
+	if len(aa) == 0 {
+		fmt.Printf("user email activatation: code not found\n")
+		return false
+	}
+
+	if aa[0].Code == code {
+		db.Delete(uu[0])
+	}
+	uu[0].Activated = 1
+	db.Create(uu[0])
+
+	return true
+}
+
+func sendEmail(vcode string, to string) {
 	serverHost := "smtp.163.com"
 	serverPort := 465
 	fromEmail := "jiangjm718@163.com" //发件人邮箱
 	fromPasswd := "NOEQLRDWEFJLJZHC"  //授权码
 
-	myToers := "2705111998@qq.com" // 收件人邮箱，逗号隔开
-	myCCers := "2705111998@qq.com" //"readchy@163.com"
+	myToers := to // 收件人邮箱，逗号隔开
+	myCCers := to //"readchy@163.com"
 
 	subject := "欢迎使用凝智成林"
-	body := `您正在验证邮箱，验证码是 113740.<br>
-             来自 <a href = "http://c.biancheng.net/"> 凝智成林Gatelligance</a>`
+	// body := `您正在验证邮箱，验证码是 113740.<br>
+	//          来自 <a href = "http://c.biancheng.net/"> 凝智成林Gatelligance</a>`
+	body := `您正在验证邮箱，验证码是 ` + vcode + ` .<br>` +
+		`来自 <a href = "https://j1am1ng.github.io/Gatelligence-pc"> 凝智成林Gatelligance</a>`
 	// 结构体赋值
 	myEmail := &EmailParam{
 		ServerHost: serverHost,
@@ -102,4 +162,10 @@ func SendTest() {
 
 	InitEmail(myEmail)
 	SendEmail(subject, body)
+}
+
+func get6DigitCode() string {
+	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
+	vcode := fmt.Sprintf("%06v", rnd.Int31n(1000000))
+	return vcode
 }

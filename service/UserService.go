@@ -28,7 +28,7 @@ func HandleUserLogin(password string, email string, db *gorm.DB, c *gin.Context)
 		// c.String(http.StatusOK, "passwd")
 		c.JSON(http.StatusOK, Utils.LoginResponse{
 			Token:     "-1",
-			IsSuccess: "false",
+			IsSuccess: false,
 			ErrorMsg:  "402",
 		})
 		return
@@ -44,7 +44,7 @@ func HandleUserLogin(password string, email string, db *gorm.DB, c *gin.Context)
 		// c.String(http.StatusNotFound, err.Error())
 		c.JSON(http.StatusOK, Utils.LoginResponse{
 			Token:     "-1",
-			IsSuccess: "false",
+			IsSuccess: false,
 			ErrorMsg:  "401",
 		})
 		return
@@ -53,7 +53,7 @@ func HandleUserLogin(password string, email string, db *gorm.DB, c *gin.Context)
 
 	c.JSON(http.StatusOK, Utils.LoginResponse{
 		Token:     signedToken,
-		IsSuccess: "true",
+		IsSuccess: true,
 		ErrorMsg:  "200",
 	})
 
@@ -73,19 +73,19 @@ func HandleUserRegister(password string, email string, nickName string, db *gorm
 	if uu.Email != email {
 		//email num haven't used yet
 		strUsrUid := userUid.String()
-		newUser := Entity.User{ID: strUsrUid, Phone: "", NickName: nickName, Email: email, PassSHA: passwdSHA, Gender: "保密"}
+		newUser := Entity.User{ID: strUsrUid, Phone: "", NickName: nickName, Email: email, PassSHA: passwdSHA, Gender: "保密", Avatar: 1}
 		db.Create(newUser)
 		//register success
 		// c.String(http.StatusOK, "ok")
 		c.JSON(http.StatusOK, Utils.RegisterResponse{
-			IsSuccess: "true",
+			IsSuccess: true,
 			ErrorMsg:  "200",
 		})
 	} else {
 		//email is used!
 		// c.String(http.StatusOK, "email")
 		c.JSON(http.StatusOK, Utils.RegisterResponse{
-			IsSuccess: "false",
+			IsSuccess: false,
 			ErrorMsg:  "301",
 		})
 	}

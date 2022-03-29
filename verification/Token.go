@@ -73,6 +73,22 @@ func VerifyTokenHandler(c *gin.Context) {
 	c.String(http.StatusOK, "verify,", claim.ID)
 }
 
+func RefreshToken(strToken string) string {
+
+	claims, err := verifyAction(strToken)
+	if err != nil {
+		return "-1"
+	}
+
+	claims.ExpiresAt = time.Now().Unix() + (claims.ExpiresAt - claims.IssuedAt)
+	signedToken, err := GetToken(claims)
+	if err != nil {
+		return "-1"
+	}
+
+	return signedToken
+}
+
 func RefreshTokenHandler(c *gin.Context) {
 
 	strToken := c.DefaultQuery("token", "nil")

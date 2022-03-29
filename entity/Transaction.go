@@ -11,6 +11,9 @@ type Transaction struct {
 	Server    int
 	Owner     string
 	CreatedAt time.Time
+	Type      string
+	Avatar    string
+	Title     string
 }
 
 func InitTransaction(db *gorm.DB) {

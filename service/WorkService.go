@@ -1,20 +1,20 @@
 package service
 
 import (
-	"encoding/json"
 	"fmt"
 	"gatelligance/entity"
+	"gatelligance/utils"
 	"net/url"
-	"time"
+	"strconv"
 
 	"github.com/jinzhu/gorm"
 )
 
-type checkLinkTransactionStruct struct {
-	Progress string `json:"Progress"`
-	Status   string `json:"Status"`
-	Output   string `json:"Output"`
-}
+// type checkLinkTransactionStruct struct {
+// 	Progress string `json:"Progress"`
+// 	Status   string `json:"Status"`
+// 	Output   string `json:"Output"`
+// }
 
 func GetTransactionServerNumber(db *gorm.DB, tuid string) int {
 	var transactions []entity.Transaction
@@ -29,54 +29,116 @@ func GetTransactionServerNumber(db *gorm.DB, tuid string) int {
 	return transactions[0].Server
 }
 
-func CheckLinkTransactionService(tuid string, db *gorm.DB) (string, string, string) {
-	sid := GetTransactionServerNumber(db, tuid)
-	saddr := GetSlaveServerAddress(db, sid)
-	resBody := SendPostRequest(saddr+"/checkLinkWork",
-		url.Values{"uuid": {tuid}, "test": {"false"}})
+//v3.0
+func CheckLinkTransactionService(tuid string, db *gorm.DB) utils.TaskCheckReturn {
+	var results []getUsersTransactionListDBResult
+	db.Raw("SELECT transactions.title as title,transactions.avatar as avatar,link_transactions.progress as progress,link_transactions.output as output,link_transactions.status as status, transactions.type as type, users.id as uuid,transactions.id as tuid FROM users, transactions,link_transactions WHERE  transactions.id= ? AND users.id=transactions.owner AND link_transactions.id=transactions.id", tuid).Scan(&results)
 
-	var retStruct checkLinkTransactionStruct
-
-	err := json.Unmarshal([]byte(string(resBody)), &retStruct)
-
-	if err != nil {
-		return "-1", "-1", "nil"
+	if len(results) == 0 {
+		fmt.Printf("transcation: not found\n")
+		return utils.TaskCheckReturn{}
 	}
 
-	return retStruct.Progress, retStruct.Status, retStruct.Output
+	return utils.TaskCheckReturn{
+		Output: results[0].Output,
+		Avatar: results[0].Avatar,
+		Title:  results[0].Title,
+
+		Progress: results[0].Progress,
+		Status:   results[0].Status,
+		Type:     results[0].Type,
+	}
 }
 
-// v2.0
+// v3.0
 func CreateLinkTransaction(videoLink string, db *gorm.DB, creator string) string {
 	sid, saddr := GetNextUseableSlaveServer(db)
 	resBody := SendPostRequest(saddr+"/addLinkWork",
-		url.Values{"addr": {videoLink}, "id": {"123"}})
-
-	// resBody := SendPostRequest(saddr, "/addLinkWork", videoLink)
-
-	var nt = new(entity.Transaction)
-	nt.CreatedAt = time.Now()
-	nt.Owner = creator
-	nt.ID = resBody
-	nt.Server = sid
-	db.Create(nt)
+		url.Values{"addr": {videoLink}, "owner": {creator}, "sid": {strconv.Itoa(sid)}})
 
 	return resBody
 }
 
 type getUsersTransactionListDBResult struct {
-	Uuid string `json:"uuid"`
-	Tuid string `json:"tuid"`
+	Uuid     string `json:"uuid"`
+	Tuid     string `json:"tuid"`
+	Progress string
+	Status   string
+	Type     string
+	Output   string
+	Avatar   string
+	Title    string
 }
 
-func GetUsersTransactionList(db *gorm.DB, userID string) {
+func GetUsersTransactionList(db *gorm.DB, userID string, page int) []utils.TaskListRow {
 	var results []getUsersTransactionListDBResult
-	db.Raw("SELECT users.id as uuid,transactions.id as tuid FROM users, transactions WHERE  users.id= ? AND users.id=transactions.owner", userID).Scan(&results)
+	var ret []utils.TaskListRow
+	db.Raw("SELECT transactions.title as title,transactions.avatar as avatar, link_transactions.output as output, link_transactions.progress as progress,link_transactions.status as status, transactions.type as type, users.id as uuid,transactions.id as tuid FROM users, transactions,link_transactions WHERE  users.id= ? AND users.id=transactions.owner AND link_transactions.id=transactions.id", userID).Scan(&results)
+	// db_algo.Raw("SELECT link_transactions.progress as progress,link_transactions.status as status, transactions.type as type FROM transactions, link_transactions WHERE  link_transactions.id= ? AND link_transactions.id=transactions.id", value.Tuid).Scan(&algoResults)Z
+	var si = (page - 1) * 10
+	var i = 0
 	for _, value := range results {
-		println(value.Uuid + "_" + value.Tuid)
+
+		//分页.页大小是10.
+		i++
+		// println(i)
+		if i < si {
+			continue
+		}
+		if i > si+10 {
+			break
+		}
+
+		ret = append(ret, utils.TaskListRow{
+			Progress: value.Progress,
+			Status:   value.Status,
+			Avatar:   value.Avatar,
+			Title:    value.Title,
+			Type:     value.Type,
+			// TaskList: Service.CreateLinkTransaction(link),
+		})
+
 	}
 	// println(MapToJson(results))
+	return ret
 }
+
+//v2.0
+// func CheckLinkTransactionService(tuid string, db *gorm.DB) (string, string, string) {
+// 	sid := GetTransactionServerNumber(db, tuid)
+// 	saddr := GetSlaveServerAddress(db, sid)
+// 	resBody := SendPostRequest(saddr+"/checkLinkWork",
+// 		url.Values{"uuid": {tuid}, "test": {"false"}})
+
+// 	var retStruct checkLinkTransactionStruct
+
+// 	err := json.Unmarshal([]byte(string(resBody)), &retStruct)
+
+// 	if err != nil {
+// 		return "-1", "-1", "nil"
+// 	}
+
+// 	return retStruct.Progress, retStruct.Status, retStruct.Output
+// }
+
+// v2.0
+// func CreateLinkTransaction(videoLink string, db *gorm.DB, creator string) string {
+// 	sid, saddr := GetNextUseableSlaveServer(db)
+// 	resBody := SendPostRequest(saddr+"/addLinkWork",
+// 		url.Values{"addr": {videoLink}, "id": {"123"}})
+
+// 	// resBody := SendPostRequest(saddr, "/addLinkWork", videoLink)
+
+// 	var nt = new(entity.Transaction)
+// 	nt.CreatedAt = time.Now()
+// 	nt.Owner = creator
+// 	nt.ID = resBody
+// 	nt.Server = sid
+// 	nt.Type = "1"
+// 	db.Create(nt)
+
+// 	return resBody
+// }
 
 //v1.0
 // func CreateLinkTransaction(addr string) string {

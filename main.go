@@ -43,6 +43,7 @@ func initAPIs(err *error, db *gorm.DB) *gin.Engine {
 
 func connectDatabase() (*gorm.DB, error) {
 	db, err := gorm.Open("mysql", "backend:As123456$@(rm-wz9637tu57d99e8665o.mysql.rds.aliyuncs.com:3306)/gatelligance?charset=utf8mb4&parseTime=True&loc=Local")
+
 	if err != nil {
 		log.Printf("open database error:%v", err)
 		return nil, err
@@ -53,9 +54,10 @@ func connectDatabase() (*gorm.DB, error) {
 
 func initEntities(db *gorm.DB) {
 	Entity.InitUsers(db)
-	Entity.InitResources(db)
+	Entity.InitAvatarResources(db)
 	Entity.InitTransaction(db)
 	Entity.InitSlaveServer(db)
+	Entity.InitEmailActiCode(db)
 }
 
 func Cors() gin.HandlerFunc {
