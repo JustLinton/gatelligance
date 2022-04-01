@@ -72,9 +72,10 @@ type CheckLinkTransactionResponse struct {
 }
 
 type TaskListRow struct {
-	Progress string
-	Status   string
-	Type     string
+	Progress      string
+	Status        string
+	Type          string
+	TransactionID string
 
 	Avatar string
 	Title  string

@@ -3,7 +3,6 @@ package controller
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"gatelligance/service"
 	"gatelligance/utils"
@@ -52,18 +51,23 @@ func InitWorkController(err *error, db *gorm.DB, router *gin.Engine) {
 
 	router.POST("/frontEnd/fetchList", func(c *gin.Context) {
 
-		token := c.DefaultPostForm("token", "nil")
-		page := c.DefaultPostForm("page", "nil")
+		var pForm utils.FetchListPostForm
 
-		if token == "nil" || page == "nil" {
-			c.String(http.StatusNotAcceptable, fmt.Sprintln("network"))
+		if err := c.ShouldBind(&pForm); err != nil {
+			// 处理错误请求
+			c.JSON(200, utils.TransactionListResponse{
+				IsSuccess: false,
+				ErrorMsg:  "100",
+				TaskList:  make([]utils.TaskListRow, 0),
+			})
 			return
 		}
+		// token := c.DefaultPostForm("token", "nil")
+		// page := c.DefaultPostForm("page", "nil")
 
-		success, user := Verification.GetUserFromToken(token, err, db, router)
+		success, user := Verification.GetUserFromToken(pForm.Token, err, db, router)
 		if success {
-			pageInt, _ := strconv.Atoi(page)
-			var taskList []utils.TaskListRow = service.GetUsersTransactionList(db, user.ID, pageInt)
+			var taskList []utils.TaskListRow = service.GetUsersTransactionList(db, user.ID, pForm.Page)
 			c.JSON(200, utils.TransactionListResponse{
 				IsSuccess: true,
 				ErrorMsg:  "200",
@@ -73,6 +77,7 @@ func InitWorkController(err *error, db *gorm.DB, router *gin.Engine) {
 			c.JSON(200, utils.TransactionListResponse{
 				IsSuccess: false,
 				ErrorMsg:  "501",
+				TaskList:  make([]utils.TaskListRow, 0),
 			})
 		}
 

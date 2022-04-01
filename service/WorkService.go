@@ -90,16 +90,20 @@ func GetUsersTransactionList(db *gorm.DB, userID string, page int) []utils.TaskL
 		}
 
 		ret = append(ret, utils.TaskListRow{
-			Progress: value.Progress,
-			Status:   value.Status,
-			Avatar:   value.Avatar,
-			Title:    value.Title,
-			Type:     value.Type,
+			Progress:      value.Progress,
+			Status:        value.Status,
+			Avatar:        value.Avatar,
+			Title:         value.Title,
+			Type:          value.Type,
+			TransactionID: value.Tuid,
 			// TaskList: Service.CreateLinkTransaction(link),
 		})
 
 	}
 	// println(MapToJson(results))
+	if len(ret) < 1 {
+		return make([]utils.TaskListRow, 0)
+	}
 	return ret
 }
 
