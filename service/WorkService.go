@@ -73,21 +73,15 @@ type getUsersTransactionListDBResult struct {
 func GetUsersTransactionList(db *gorm.DB, userID string, page int) []utils.TaskListRow {
 	var results []getUsersTransactionListDBResult
 	var ret []utils.TaskListRow
-	db.Raw("SELECT transactions.title as title,transactions.avatar as avatar, link_transactions.output as output, link_transactions.progress as progress,link_transactions.status as status, transactions.type as type, users.id as uuid,transactions.id as tuid FROM users, transactions,link_transactions WHERE  users.id= ? AND users.id=transactions.owner AND link_transactions.id=transactions.id", userID).Scan(&results)
+	startFromIndex := 0
+	if page >= 2 {
+		startFromIndex = 9 + (page-2)*10
+	}
+	db.Raw("SELECT transactions.title as title,transactions.avatar as avatar, link_transactions.output as output, link_transactions.progress as progress,link_transactions.status as status, transactions.type as type, users.id as uuid,transactions.id as tuid FROM users, transactions,link_transactions WHERE  users.id= ? AND users.id=transactions.owner AND link_transactions.id=transactions.id ORDER BY transactions.created_at Desc LIMIT ?,10", userID, startFromIndex).Scan(&results)
 	// db_algo.Raw("SELECT link_transactions.progress as progress,link_transactions.status as status, transactions.type as type FROM transactions, link_transactions WHERE  link_transactions.id= ? AND link_transactions.id=transactions.id", value.Tuid).Scan(&algoResults)Z
-	var si = (page - 1) * 10
-	var i = 0
-	for _, value := range results {
 
-		//分页.页大小是10.
-		i++
-		// println(i)
-		if i < si {
-			continue
-		}
-		if i > si+10 {
-			break
-		}
+	println("len:" + strconv.Itoa(len(results)))
+	for _, value := range results {
 
 		ret = append(ret, utils.TaskListRow{
 			Progress:      value.Progress,
@@ -96,7 +90,6 @@ func GetUsersTransactionList(db *gorm.DB, userID string, page int) []utils.TaskL
 			Title:         value.Title,
 			Type:          value.Type,
 			TransactionID: value.Tuid,
-			// TaskList: Service.CreateLinkTransaction(link),
 		})
 
 	}
