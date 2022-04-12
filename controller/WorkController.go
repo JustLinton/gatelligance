@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"gatelligance/entity"
 	"gatelligance/service"
 	"gatelligance/utils"
 	Verification "gatelligance/verification"
@@ -13,6 +14,26 @@ import (
 )
 
 func InitWorkController(err *error, db *gorm.DB, router *gin.Engine) {
+
+	router.POST("/frontEnd/checkLinkTaskStatus", func(c *gin.Context) {
+		tid := c.DefaultPostForm("tid", "nil")
+		// token := c.DefaultPostForm("token", "nil")
+
+		if tid == "nil" {
+			c.String(http.StatusNotAcceptable, fmt.Sprintln("network"))
+			return
+		}
+
+		var transactions []entity.LinkTransaction
+
+		db.Find(&transactions, "id=?", tid)
+
+		if len(transactions) != 0 {
+			c.String(http.StatusOK, transactions[0].Status)
+		} else {
+			c.String(http.StatusOK, "nf")
+		}
+	})
 
 	router.POST("/frontEnd/checkLinkTransaction", func(c *gin.Context) {
 		tid := c.DefaultPostForm("tid", "nil")
@@ -26,16 +47,31 @@ func InitWorkController(err *error, db *gorm.DB, router *gin.Engine) {
 		success, user := Verification.GetUserFromToken(token, err, db, router)
 		if success {
 			res := service.CheckLinkTransactionService(tid, db)
-			c.JSON(http.StatusOK, utils.CheckLinkTransactionResponse{
-				IsSuccess: true,
-				ErrorMsg:  "200",
-				Progress:  res.Progress,
-				Status:    res.Status,
-				Output:    res.Output,
-				Avatar:    res.Avatar,
-				Title:     res.Title,
-				Type:      res.Type,
-			})
+			om, omerr := utils.UnMarshal_OutputMars(res.Output)
+			if omerr != nil {
+				c.JSON(http.StatusOK, utils.CheckLinkTransactionResponse{
+					IsSuccess: false,
+					ErrorMsg:  "outMarshal error.",
+					Progress:  "-1",
+					Status:    "-1",
+					Output:    utils.CheckLinkTransactionResponse_OutputStruct{OriginalText: "", SummaryText: ""},
+				})
+			} else {
+				c.JSON(http.StatusOK, utils.CheckLinkTransactionResponse{
+					IsSuccess: true,
+					ErrorMsg:  "200",
+					Progress:  res.Progress,
+					Status:    res.Status,
+					Output: utils.CheckLinkTransactionResponse_OutputStruct{
+						OriginalText: om.OriginalText,
+						SummaryText:  om.SummaryText,
+					},
+					Avatar: res.Avatar,
+					Title:  res.Title,
+					Type:   res.Type,
+				})
+			}
+
 			print(user.ID)
 		} else {
 			c.JSON(http.StatusOK, utils.CheckLinkTransactionResponse{
@@ -43,7 +79,7 @@ func InitWorkController(err *error, db *gorm.DB, router *gin.Engine) {
 				ErrorMsg:  "501",
 				Progress:  "-1",
 				Status:    "-1",
-				Output:    "nil",
+				Output:    utils.CheckLinkTransactionResponse_OutputStruct{OriginalText: "", SummaryText: ""},
 			})
 		}
 

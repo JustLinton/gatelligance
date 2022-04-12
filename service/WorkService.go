@@ -80,7 +80,7 @@ func GetUsersTransactionList(db *gorm.DB, userID string, page int) []utils.TaskL
 	db.Raw("SELECT transactions.title as title,transactions.avatar as avatar, link_transactions.output as output, link_transactions.progress as progress,link_transactions.status as status, transactions.type as type, users.id as uuid,transactions.id as tuid FROM users, transactions,link_transactions WHERE  users.id= ? AND users.id=transactions.owner AND link_transactions.id=transactions.id ORDER BY transactions.created_at Desc LIMIT ?,10", userID, startFromIndex).Scan(&results)
 	// db_algo.Raw("SELECT link_transactions.progress as progress,link_transactions.status as status, transactions.type as type FROM transactions, link_transactions WHERE  link_transactions.id= ? AND link_transactions.id=transactions.id", value.Tuid).Scan(&algoResults)Z
 
-	println("len:" + strconv.Itoa(len(results)))
+	// println("len:" + strconv.Itoa(len(results)))
 	for _, value := range results {
 
 		ret = append(ret, utils.TaskListRow{

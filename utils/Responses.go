@@ -58,13 +58,18 @@ type AvatarListResponse struct {
 	Data      []entity.AvatarResourceTable
 }
 
+type CheckLinkTransactionResponse_OutputStruct struct {
+	OriginalText string
+	SummaryText  string
+}
+
 type CheckLinkTransactionResponse struct {
 	IsSuccess bool
 	ErrorMsg  string
 
 	Progress string
 	Status   string
-	Output   string
+	Output   CheckLinkTransactionResponse_OutputStruct
 
 	Avatar string
 	Title  string

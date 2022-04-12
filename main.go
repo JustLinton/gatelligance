@@ -20,6 +20,8 @@ func main() {
 
 	// Service.SendTest()
 
+	gin.SetMode(gin.ReleaseMode)
+
 	router := initAPIs(&err, db)
 	router.Use(Cors())
 	router.Run(":8091")

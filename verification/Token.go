@@ -2,7 +2,6 @@ package verification
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -35,7 +34,7 @@ type JWTClaims struct { // token里面添加用户信息，验证token后可能�
 
 var (
 	Secret     = "this-is-a-secret-key-by-linton-jiang." // 加盐
-	ExpireTime = 3600                                    // token有效期
+	ExpireTime = 3600 * 24 * 30                          // token有效期：1个月
 )
 
 func GetUserFromToken(strToken string, err *error, db *gorm.DB, router *gin.Engine) (bool, Entity.User) {
@@ -122,7 +121,7 @@ func verifyAction(strToken string) (*JWTClaims, error) {
 	if err := token.Claims.Valid(); err != nil {
 		return nil, errors.New(ErrorReason_ReLogin)
 	}
-	fmt.Println("verify")
+	// fmt.Println("verify")
 	return claims, nil
 }
 
